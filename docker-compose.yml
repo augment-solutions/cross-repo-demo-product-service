@@ -1,0 +1,47 @@
+# E-Commerce Product Service
+# ===========================
+# Contains: product-service (Node.js/TypeScript)
+#
+# Note: This service depends on ecomm-core's postgres, redis, and shared network.
+# Make sure ecomm-core is running first, or use the root docker-compose.yml
+#
+# Usage:
+#   Start service:        docker compose up -d
+#   View logs:            docker compose logs -f product-service
+#   Stop service:         docker compose down
+
+services:
+  product-service:
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    container_name: ecomm-product-service
+    environment:
+      REDIS_URL: redis://ecomm-redis:6379
+      POSTGRES_HOST: ecomm-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PORT: 8063
+    ports:
+      - "8063:8063"
+    healthcheck:
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --tries=1
+        - --spider
+        - http://127.0.0.1:8063/health
+    networks:
+      - ecomm-network
+    restart: unless-stopped
+
+networks:
+  ecomm-network:
+    external: true
+    name: cross-repo-demo-core_ecomm-network
